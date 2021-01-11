@@ -16,8 +16,8 @@ When looking for the magnitude response, one should then look at the z-transform
 You can see, that the products are simply the products of the distances of a point running on the unit circle to all the poles or zeros (complex numbers) respectively. So for any angle <img src="https://render.githubusercontent.com/render/math?math=\Omega">:
 
 1. Calculate the distances from the point on the unit circle to all 
-  * Zeroes --> Numerator
-  * Poles  --> Denominator
+   * Zeroes --> Numerator
+   * Poles  --> Denominator
 2. Multiply all the distances, respectively
 3. Divide numerator by denominator
 4. Plot result at the angle <img src="https://render.githubusercontent.com/render/math?math=\Omega">
