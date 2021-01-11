@@ -10,7 +10,7 @@ Vsualizing the magnitude response of the z-transform of a system with a geometri
 ## Lowpass
 ![gif image](lp.gif)
 
-## Lowpass
+## Madness
 ![gif image](mad.gif)
 
 ## Explanation
