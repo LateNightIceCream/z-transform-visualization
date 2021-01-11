@@ -1,5 +1,5 @@
 # z-transform-visualization
-Vsualizing the magnitude response of the z-transform of a system with a geometric interpretation.
+Visualizing the magnitude response of the z-transform of a system with a geometric interpretation.
 
 ## CIC / MAV
 ![gif image](cic.gif)
