@@ -8,4 +8,6 @@ The z-transform of a difference equation of a system, e.g. an FIR-Filter, is def
 
 which can be rewritten in terms of the system's poles and zeroes:
 
-<img src="https://render.githubusercontent.com/render/math?math=H(z) = b_0 \cdot \frac{\prod_{k=1}^{N}{(z - z_{0,k})} }{\prod_{i=1}^{P}{z - z_{p,i}}} \cdot z^{N-P}">
+<img src="https://render.githubusercontent.com/render/math?math=H(z) = b_0 \cdot \frac{\prod_{k=1}^{N}{(z - z_{0,k})} }{\prod_{i=1}^{P}{(z - z_{p,i})}} \cdot z^{P-N}">
+
+When looking for the magnitude response, one should then look at the z-transform on the unit circle only, i.e. at <img src="https://render.githubusercontent.com/render/math?math=z = e^{j \Omega}"> where <img src="https://render.githubusercontent.com/render/math?math=\Omega = 2 \pi \frac{f}{f_{sample}}"> is the normalized frequency.
