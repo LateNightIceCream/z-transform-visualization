@@ -10,17 +10,18 @@ function setup() {
   unitCircle = new UnitCircle (0.236*width, height/2, width*0.236);
 
   // Integrator
-  unitCircle.addZero(0, 0);
-  unitCircle.addPole(1, 0);
+  /*unitCircle.addZero(0, 0);
+  unitCircle.addPole(1, 0);*/
+
 
   // Comb Filter
-  let N = 5;
+  /*let N = 5;
   for (let i = 0; i < N; i++) {
 
     let deltaPhi = TWO_PI / (N);
     unitCircle.addZero( cos(deltaPhi * i), sin(deltaPhi * i));
     unitCircle.addPole(0, 0);
-  }
+  }*/
 
   // MAV Filter
   /*
@@ -37,6 +38,21 @@ function setup() {
   }
 
   */
+
+  // LP
+  for (let i = 0; i < 2; i++) {
+    unitCircle.addPole(0, 0);
+  }
+
+  for (let i = 0; i < 2; i++) {
+    unitCircle.addZero(2.4, 1.34 * pow(-1,i));
+    unitCircle.addZero(2.4, 1.34 * pow(-1,i));
+    unitCircle.addZero(-0.988, 0.15555 * pow(-1,i));
+    unitCircle.addZero(-0.8224, 0.5689 * pow(-1,i));
+    unitCircle.addZero(-0.91, 0.421 * pow(-1,i));
+    unitCircle.addZero(0.318, 0.1772* pow(-1,i));
+  }
+
 
   plot = new Plot(unitCircle.x + unitCircle.radius + 75, unitCircle.y + unitCircle.radius, width/2, unitCircle.dia);
   
