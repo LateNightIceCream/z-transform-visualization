@@ -34,5 +34,6 @@ You can see, that the products are simply the products of the distances of a poi
 2. Multiply all the distances, respectively
 3. Divide numerator by denominator
 4. Plot result at the angle <img src="https://render.githubusercontent.com/render/math?math=\Omega">
+5. Profit
 
 The code is kinda terrible and needs a lot of refactoring, but it serves the purpose :)
