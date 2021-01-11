@@ -3,6 +3,10 @@ Vsualizing the magnitude response of the z-transform of a system with a geometri
 
 ![gif image](cic.gif)
 
+![gif image](comb.gif)
+
+![gif image](lp.gif)
+
 The z-transform of a difference equation of a system, e.g. an FIR-Filter, is defined by
 
 <img src="https://render.githubusercontent.com/render/math?math=H(z) = \sum_{n=0}^{N}{b_k \cdot z^{-k}}">
