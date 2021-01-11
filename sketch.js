@@ -411,7 +411,19 @@ function toRGB (color) {
 
 function mouseClicked () {
 
-  unitCircle.zeroArray.push(new PoleZero(
-    mouseX, mouseY, "z"));
+  let type = "z";
 
+  unitCircle.zeroArray.push(new PoleZero(
+    mouseX, mouseY, type));
+
+}
+
+function keyPressed() {
+
+  let type = "p";
+
+  unitCircle.zeroArray.push(new PoleZero(
+    mouseX, mouseY, type));
+
+  return false;
 }
