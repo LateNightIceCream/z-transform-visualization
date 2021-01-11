@@ -1,7 +1,7 @@
 # z-transform-visualization
 Vsualizing the magnitude response of the z-transform of a system with a geometric interpretation.
 
-![gif image](z.gif)
+![gif image](cic.gif)
 
 The z-transform of a difference equation of a system, e.g. an FIR-Filter, is defined by
 
