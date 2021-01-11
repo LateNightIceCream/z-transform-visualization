@@ -1,6 +1,8 @@
 # z-transform-visualization
 Vsualizing the magnitude response of the z-transform of a system with a geometric interpretation.
 
+![gif image](z.gif)
+
 The z-transform of a difference equation of a system, e.g. an FIR-Filter, is defined by
 
 <img src="https://render.githubusercontent.com/render/math?math=H(z) = \sum_{n=0}^{N}{b_k \cdot z^{-k}}">
@@ -21,3 +23,5 @@ You can see, that the products are simply the products of the distances of a poi
 2. Multiply all the distances, respectively
 3. Divide numerator by denominator
 4. Plot result at the angle <img src="https://render.githubusercontent.com/render/math?math=\Omega">
+
+The code is kinda terrible and needs a lot of refactoring, but it serves the purpose :)
