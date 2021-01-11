@@ -1,10 +1,13 @@
 # z-transform-visualization
 Vsualizing the magnitude response of the z-transform of a system with a geometric interpretation.
 
+## CIC / MAV
 ![gif image](cic.gif)
 
+## Comb
 ![gif image](comb.gif)
 
+## Lowpass
 ![gif image](lp.gif)
 
 The z-transform of a difference equation of a system, e.g. an FIR-Filter, is defined by
