@@ -1,3 +1,4 @@
+"use strict"
 
 let unitCircle; 
 let angle = 0;
@@ -10,18 +11,18 @@ function setup() {
   unitCircle = new UnitCircle (0.236*width, height/2, width*0.236);
 
   // Integrator
-  /*unitCircle.addZero(0, 0);
-  unitCircle.addPole(1, 0);*/
+  unitCircle.addZero(0, 0);
+  unitCircle.addPole(1, 0);
 
 
   // Comb Filter
-  /*let N = 5;
+  let N = 5;
   for (let i = 0; i < N; i++) {
 
     let deltaPhi = TWO_PI / (N);
     unitCircle.addZero( cos(deltaPhi * i), sin(deltaPhi * i));
     unitCircle.addPole(0, 0);
-  }*/
+  }
 
   // MAV Filter
   /*
@@ -40,7 +41,7 @@ function setup() {
   */
 
   // LP
-  for (let i = 0; i < 2; i++) {
+  /*for (let i = 0; i < 2; i++) {
     unitCircle.addPole(0, 0);
   }
 
@@ -51,8 +52,7 @@ function setup() {
     unitCircle.addZero(-0.8224, 0.5689 * pow(-1,i));
     unitCircle.addZero(-0.91, 0.421 * pow(-1,i));
     unitCircle.addZero(0.318, 0.1772* pow(-1,i));
-  }
-
+  }*/
 
   plot = new Plot(unitCircle.x + unitCircle.radius + 75, unitCircle.y + unitCircle.radius, width/2, unitCircle.dia);
   
@@ -67,12 +67,9 @@ function draw() {
   unitCircle.show();
 
   plot.argX = unitCircle.currentAngle;
-  plot.argY = unitCircle.currentMagnitude;
+  plot.argY = unitCircle.calculator.currentMagnitude;
 
   console.log(plot.argY);
-
-  // TODO: scale max of y axis automatically based on poles closest to unit circle
-  //  plot.maxArgY = 
 
   if (plot.argY > max) {
     max = plot.argY;
@@ -96,8 +93,8 @@ class Plot {
     this.xFromOrigin = 0; // for plotting
     this.yFromOrigin = 0;
 
-    this.argX    = 0; // actual values
-    this.argY    = 0;
+    this.argX = 0; // actual values
+    this.argY = 0;
 
     this.previousValues = {xs: [], ys: []};
 
@@ -190,76 +187,53 @@ class Plot {
 class UnitCircle {
 
   constructor (x, y, dia = 100) {
-    this.x = x;
-    this.y = y;
-    this.dia = dia;
-    this.radius = this.dia / 2;
-    this.currentAngle = 0; // radians
-
-    this.movingPoint = new Point(this.x + this.radius, this.y + 0);
+    this.x            = x;
+    this.y            = y;
+    this.dia          = dia;
+    this.radius       = this.dia / 2;
+    this.currentAngle = 0; // rad
 
     this.poleArray = [];
     this.zeroArray = [];
 
-    this.poleDistances = [];
-    this.zeroDistances = [];
+    this.movingPoint = new PointOnCircle(this.x, this.y, this.radius);
 
-    this.denominator = 0;
-    this.numerator   = 0;
-    
-    this.currentMagnitude = 0;
-    this.magResponse = {frequency: [], magnitude: []};
+    this.calculator  = new UnitCircleCalculator(this);
 
     this.colors = {
       circle: "#343a40",
       axes:   "#dee2e6",
-      color1: "#ff6b6b",
-      color2: "#339af0",
-      mix:    0,
+      poles:  "#ff6b6b",
+      zeroes: "#339af0",
     };
   }
 
   show () {
-
     this.showAxes();
     this.showUnitCircle();
+    this.showZeros();
+    this.showPoles();
+    this.showMovingPoint();
+    this.showDistanceLines();
 
+    this.calculator.calcMagResponse();
+
+    this.resetOnCompletedRound();
+  }
+
+  resetOnCompletedRound () {
     if (this.currentAngle >= TWO_PI) {
 
       this.currentAngle = 0;
 
-      this.magResponse.frequency.length = 0;
-      this.magResponse.magnitude.length = 0;
-
+      this.calculator.magResponse.frequency.length = 0;
+      this.calculator.magResponse.magnitude.length = 0;
     }
-
-    this.calcMovingPointPos(this.currentAngle);
-
-    this.calcDistancesAndDrawLines();
-
-    this.showMovingPoint();
-    this.showZeros();
-    this.showPoles();
-
-    this.calcMagResponse();
-    
   }
 
   showMovingPoint () {
-
-    fill (this.colors.mix);
-    this.movingPoint.show();
-
-  }
-
-  avgArray (arr) {
-
-    let avg = 0;
-    for (let i = 0; i < arr.length; i++) {
-      avg += arr[i];
-    }
-    
-    return avg;
+    fill (this.colors.circle);
+    this.movingPoint.show(this.currentAngle);
   }
 
   showUnitCircle () {
@@ -268,64 +242,23 @@ class UnitCircle {
     circle(this.x, this.y, this.dia);
   }
 
-  showAxes () {
+  showDistanceLines () {
+    this.poleArray.forEach(pole => {
+      this.movingPoint.connectionLineTo(pole, this.colors.poles);
+    });
 
+    this.zeroArray.forEach(zero => {
+      this.movingPoint.connectionLineTo(zero, this.colors.zeroes);
+    });
+  }
+
+  showAxes () {
     let overshoot = 1.382;
     let halfLine  = this.radius * overshoot;
 
     stroke(this.colors.axes);
     line(this.x, this.y + halfLine, this.x, this.y - halfLine);
     line(this.x + halfLine, this.y, this.x - halfLine, this.y);
-
-  }
-
-  calcMagResponse () {
-
-    this.numerator   = this.zeroDistances[0];
-    this.denominator = this.poleDistances[0];
-
-    for (let i = 1; i < this.zeroDistances.length; i++) {
-      this.numerator *= this.zeroDistances[i];
-    }
-
-    for (let i = 1; i < this.poleDistances.length; i++) {
-      this.denominator *= this.poleDistances[i];
-    }
-
-    this.currentMagnitude = this.numerator / this.denominator;
-
-    this.magResponse.frequency.push(this.currentAngle);
-    this.magResponse.magnitude.push(this.currentMagnitude);
-
-  }
-
-  calcMovingPointPos () {
-    this.movingPoint.x = this.x + this.radius * cos(this.currentAngle);
-    this.movingPoint.y = this.y - this.radius * sin(this.currentAngle);
-  }
-
-  calcDistancesAndDrawLines (drawLines = true) {
-
-    for (let i = 0; i < this.poleArray.length; i++) {
-
-      if(drawLines) {
-        stroke(this.colors.color1);
-        line(this.movingPoint.x, this.movingPoint.y, this.poleArray[i].x, this.poleArray[i].y);
-      }
-
-      this.poleDistances[i] = sqrt(this.magSq(this.movingPoint.x - this.poleArray[i].x, this.movingPoint.y - this.poleArray[i].y));
-    }
-
-    for (let i = 0; i < this.zeroArray.length; i++) {
-
-      if(drawLines) {
-        stroke(this.colors.color2);
-        line(this.movingPoint.x, this.movingPoint.y, this.zeroArray[i].x, this.zeroArray[i].y);
-      }
-
-      this.zeroDistances[i] = sqrt(this.magSq(this.movingPoint.x - this.zeroArray[i].x, this.movingPoint.y - this.zeroArray[i].y));
-    }
-
   }
 
   showPoles () {
@@ -336,94 +269,134 @@ class UnitCircle {
     this.zeroArray.forEach(zero => zero.show());
   }
 
-  // turn into one function
   addPole(real, imag) {
-    //if (this.magSq(real, imag) <= 1) {
-      this.poleArray.push(new PoleZero(this.x + this.radius * real, this.y - this.radius * imag, "p"));
-    //}
+    this.poleArray.push(new Pole(this._xFromReal(real), this._yFromImag(imag)));
   }
 
   addZero(real, imag) {
-    //if (this.magSq(real, imag) <= 1) {
-      this.zeroArray.push(new PoleZero(this.x + this.radius * real, this.y - this.radius * imag, "z"));
-    //}
+    this.zeroArray.push(new Zero(this._xFromReal(real), this._yFromImag(imag)));
   }
 
-  magSq (x, y) {
+  _xFromReal (real) {
+    return this.x + this.radius * real;
+  }
+
+  _yFromImag (imag) {
+    return this.y - this.radius * imag;
+  }
+}
+
+class UnitCircleCalculator {
+
+  constructor (unitCircle) {
+    this.unitCircle = unitCircle;
+
+    this.currentMagnitude;
+
+    this.magResponse = {
+      frequency: [],
+      magnitude: []
+    };
+
+  }
+
+  calcMagResponse () {
+
+    this.numerator   = 1;
+    this.denominator = 1;
+
+    this.unitCircle.zeroArray.forEach(zero => {
+      this.numerator *= this.unitCircle.movingPoint.distanceTo(zero);
+    });
+
+    this.unitCircle.poleArray.forEach(pole => {
+      this.denominator *= this.unitCircle.movingPoint.distanceTo(pole);
+    });
+
+    this.currentMagnitude = this.numerator / this.denominator;
+
+    this.magResponse.frequency.push(this.unitCircle.currentAngle);
+    this.magResponse.magnitude.push(this.currentMagnitude);
+
+  }
+
+}
+
+/*============================================================*/
+
+class Point {
+
+  constructor (x, y, dia = 16, hexColor = "#000000") {
+    this.x         = x;
+    this.y         = y;
+    this.dia       = dia;
+    this.rad       = dia / 2;
+    this.hexColor  = hexColor;
+  }
+
+  show () {
+    circle(this.x, this.y, this.dia);
+  }
+
+  connectionLineTo (point2, lineColor = "#ff6b6b") {
+    stroke(lineColor);
+    line(this.x, this.y, point2.x, point2.y);
+  }
+
+  distanceTo (point2) {
+    return sqrt(this._magSq(this.x - point2.x, this.y - point2.y));
+  }
+
+  _magSq (x, y) {
     return x*x + y*y;
   }
 
 }
 
+class Pole extends Point {
 
-class PoleZero {
-
-  constructor (x, y, type = "p", dia = 10) {
-    this.x      = x;
-    this.y      = y;
-    this.dia = dia;
-    this.rad = this.dia / 2;
-
-    this.type = type;
+  constructor (x, y, hexColor = "#ff6b6b", dia) {
+    super(x, y, dia, hexColor);
   }
 
-  show () {
-
-    if (this.type == "p") {
-      this.showCross();
-    } else {
-      this.showCircle();
-    }
-
-  }
-
-  showCross () {
+  // cross
+  show() {
+    stroke(this.hexColor);
     line(this.x - this.rad, this.y - this.rad, this.x + this.rad, this.y + this.rad);
     line(this.x - this.rad, this.y + this.rad, this.x + this.rad, this.y - this.rad);
   }
 
-  showCircle () {
+}
+
+class Zero extends Point {
+
+  constructor (x, y, hexColor = "#339af0", dia) {
+    super(x, y, dia, hexColor);
+  }
+
+  // empty circle
+  show() {
+    stroke(this.hexColor);
     noFill();
-    circle(this.x, this.y, this.dia);
-  }
-}
-
-
-class Point {
-
-  constructor (x, y, dia = 16) {
-    this.x      = x;
-    this.y      = y;
-    this.dia = dia;
-  }
-
-  show () {
-    circle(this.x, this.y, this.dia);
+    super.show();
   }
 
 }
 
-function toRGB (color) {
+class PointOnCircle extends Point {
 
-  return [red(color), green(color), blue(color)];
+  constructor (circleX, circleY, circleRadius, hexColor, dia) {
+    super(circleX + circleRadius, circleY, dia, hexColor);
 
-}
+    this.circleX      = circleX;
+    this.circleY      = circleY;
+    this.circleRadius = circleRadius;
+  }
 
-function mouseClicked () {
+  show (angle = 0) { // rad
+    this.x = this.circleX + this.circleRadius * cos(angle);
+    this.y = this.circleY - this.circleRadius * sin(angle);
+    super.show();
+  }
 
-  let type = "z";
-
-  unitCircle.zeroArray.push(new PoleZero(
-    mouseX, mouseY, type));
-
-}
-
-function keyPressed() {
-
-  let type = "p";
-
-  unitCircle.zeroArray.push(new PoleZero(
-    mouseX, mouseY, type));
-
-  return false;
 }
